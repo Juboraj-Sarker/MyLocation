@@ -1,6 +1,26 @@
 <resources>
     <string name="app_name">My Location</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string-array name="nearby_option">
+
+        <item>Select your choice</item>
+        <item>ATM</item>
+        <item>Bank</item>
+        <item>Hospital</item>
+        <item>Hotel</item>
+        <item>Restaurant</item>
+        <item>Coffee Shop</item>
+        <item>School</item>
+        <item>College</item>
+        <item>University</item>
+        <item>Police Station</item>
+        <item>Fire Service</item>
+        <item>Gym</item>
+        <item>Shopping Mall</item>
+        <item>Post Office</item>
+
+    </string-array>
+
+
 </resources>

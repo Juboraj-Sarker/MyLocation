@@ -1,0 +1,37 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.juborajsarker.agecalculator.Main2Activity">
+
+    <item
+        android:id="@+id/menu_rate_app"
+        android:onClick="rateApp"
+        android:orderInCategory="1"
+        android:title="Rate This App"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_share_app"
+        android:onClick="shareApp"
+        android:orderInCategory="2"
+        android:title="Share This App"
+        app:showAsAction="never" />
+
+
+    <item
+        android:id="@+id/menu_more_app"
+        android:onClick="moreApps"
+        android:orderInCategory="3"
+        android:title="More Apps"
+        app:showAsAction="never" />
+
+
+    <item
+        android:id="@+id/menu_about"
+        android:onClick="goToAboutActivity"
+        android:orderInCategory="4"
+        android:title="About"
+        app:showAsAction="never" />
+
+
+</menu>
