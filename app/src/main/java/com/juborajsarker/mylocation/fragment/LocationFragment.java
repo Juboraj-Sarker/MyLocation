@@ -43,15 +43,16 @@ import static android.content.Context.LOCATION_SERVICE;
 public class LocationFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
+
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     private final static int ALL_PERMISSIONS_RESULT = 101;
     final String TAG = "GPS";
     View view;
     Button btnViewDetails, btnShowOnMap;
     TextView cityTV, addressTV, subCityTV, countryNameTV, countryCodeTV, posterCodeTV, divisionTV, latitudeTV, longitudeTV;
-    Address returnAddress;
     Double latitude;
     Double longitude;
+    Address returnAddress;
     LocationManager locationManager;
     ArrayList<String> permissions = new ArrayList<>();
     ArrayList<String> permissionsToRequest;
@@ -209,19 +210,20 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
         mGoogleApiClient.connect();
 
+
     }
 
     @Override
     public void onPause() {
         super.onPause();
 
-        Log.v(this.getClass().getSimpleName(), "onPause()");
-
 
         if (mGoogleApiClient.isConnected()) {
 //            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, (com.google.android.gms.location.LocationListener) this);
             mGoogleApiClient.disconnect();
         }
+
+
     }
 
     private void execute() {

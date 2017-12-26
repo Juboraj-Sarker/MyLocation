@@ -92,7 +92,8 @@
             android:text="Show All On Maps"
             android:textAllCaps="false"
             android:textColor="#fff"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
 
 
     </LinearLayout>
