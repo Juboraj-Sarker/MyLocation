@@ -9,6 +9,8 @@ import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.juborajsarker.mylocation.R;
@@ -24,6 +26,8 @@ public class LocationDetailsActivity extends AppCompatActivity {
     GooglePlaces googlePlaces;
     PlaceDetails placeDetails;
     ProgressDialog pDialog;
+    double lat, lng, currentLat, currentLng;
+    String addressValue, nameValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +42,12 @@ public class LocationDetailsActivity extends AppCompatActivity {
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+        setTitle("Details");
+
         Intent i = getIntent();
+
+        currentLat = i.getDoubleExtra("currentLat", 0);
+        currentLng = i.getDoubleExtra("currentLng", 0);
 
         // Place referece id
         String reference = i.getStringExtra(KEY_REFERENCE);
@@ -121,6 +130,11 @@ public class LocationDetailsActivity extends AppCompatActivity {
                                 String latitude = Double.toString(placeDetails.result.geometry.location.lat);
                                 String longitude = Double.toString(placeDetails.result.geometry.location.lng);
 
+                                lat = Double.parseDouble(latitude);
+                                lng = Double.parseDouble(longitude);
+                                addressValue = address;
+                                nameValue = name;
+
                                 Log.d("Place ", name + address + phone + latitude + longitude);
 
                                 // Displaying all the details in the view
@@ -129,6 +143,28 @@ public class LocationDetailsActivity extends AppCompatActivity {
                                 TextView lbl_address = (TextView) findViewById(R.id.address);
                                 TextView lbl_phone = (TextView) findViewById(R.id.phone);
                                 TextView lbl_location = (TextView) findViewById(R.id.location);
+
+                                Button btnShowOnMap = (Button) findViewById(R.id.btn_show_on_map);
+                                btnShowOnMap.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+
+                                        Intent intent = new Intent(LocationDetailsActivity.this,
+                                                SIngleMapActivity.class);
+
+                                        intent.putExtra("currentLat", currentLat);
+                                        intent.putExtra("currentLng", currentLng);
+
+                                        intent.putExtra("lat", lat);
+                                        intent.putExtra("lng", lng);
+
+                                        intent.putExtra("address", addressValue);
+                                        intent.putExtra("name", nameValue);
+                                        intent.putExtra("nearby", "true");
+                                        startActivity(intent);
+                                    }
+                                });
+
 
                                 // Check for null data from google
                                 // Sometimes place details might missing

@@ -5,24 +5,28 @@
     <string-array name="nearby_option">
 
         <item>Select your choice</item>
-        <item>ATM</item>
+        <item>ATM Booth</item>
         <item>Bank</item>
         <item>Hospital</item>
-        <item>Hotel</item>
+        <item>Movie Theater</item>
         <item>Restaurant</item>
         <item>Coffee Shop</item>
         <item>School</item>
-        <item>College</item>
+        <item>Laundry</item>
         <item>University</item>
         <item>Police Station</item>
-        <item>Fire Service</item>
+        <item>Mosque</item>
         <item>Gym</item>
         <item>Shopping Mall</item>
         <item>Post Office</item>
+        <item>Pharmacy</item>
+        <item>Bar</item>
+        <item>Park</item>
 
     </string-array>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_nearby_map">Map</string>
+    <string name="title_activity_single_map">Map</string>
 
 
 </resources>

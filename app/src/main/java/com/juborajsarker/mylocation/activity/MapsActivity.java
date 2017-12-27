@@ -9,12 +9,15 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.juborajsarker.mylocation.R;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     double lat, lng;
+    LatLng location;
+    Marker marker;
     private GoogleMap mMap;
 
     @Override
@@ -26,8 +29,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         Intent intent = getIntent();
+
         lat = intent.getDoubleExtra("lat", 0);
         lng = intent.getDoubleExtra("lng", 0);
+
+
     }
 
 
@@ -35,9 +41,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        LatLng location = new LatLng(lat, lng);
-        mMap.addMarker(new MarkerOptions().position(location).title("Your Location"));
+        // Add a marker in current location and move the camera
+        location = new LatLng(lat, lng);
+        marker = mMap.addMarker(new MarkerOptions().position(location)
+                .title("Your Location")
+                .alpha(1f));
+
+        marker.showInfoWindow();
+
         mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15.0f));
         mMap.getUiSettings().setCompassEnabled(true);

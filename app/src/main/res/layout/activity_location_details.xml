@@ -80,4 +80,18 @@
     </LinearLayout>
 
 
+    <Button
+        android:id="@+id/btn_show_on_map"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@color/colorPrimary"
+        android:padding="8dp"
+        android:text="Show On Map"
+        android:textAllCaps="false"
+        android:textColor="#fff"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+
 </LinearLayout>

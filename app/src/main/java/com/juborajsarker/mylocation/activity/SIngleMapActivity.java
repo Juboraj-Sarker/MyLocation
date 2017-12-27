@@ -21,14 +21,11 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.juborajsarker.mylocation.R;
 import com.juborajsarker.mylocation.java_class.CartesianCoordinates;
 import com.juborajsarker.mylocation.java_class.DataParser;
 import com.juborajsarker.mylocation.java_class.LatLngInterpolator;
-import com.juborajsarker.mylocation.java_class.Place;
-import com.juborajsarker.mylocation.java_class.PlacesList;
 
 import org.json.JSONObject;
 
@@ -42,7 +39,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class NearbyMapActivity extends FragmentActivity implements OnMapReadyCallback, LocationSource.OnLocationChangedListener {
+public class SIngleMapActivity extends FragmentActivity implements OnMapReadyCallback, LocationSource.OnLocationChangedListener {
+
     public static final long DURATION = 5000;
     public static final LatLngInterpolator latLngInterpolator = new LatLngInterpolator.Linear();
     public static final Property<Marker, LatLng> property = Property.of(Marker.class, LatLng.class, "position");
@@ -52,15 +50,10 @@ public class NearbyMapActivity extends FragmentActivity implements OnMapReadyCal
             return latLngInterpolator.interpolate(fraction, startValue, endValue);
         }
     };
-    PlacesList nearPlaces;
+    double lat, lng, currentLat, currentLng;
+    String address, name, nearby;
     Marker marker, marker2;
     LatLng location, location2, fromLocation;
-    LatLng dest, origin;
-    int count = 0;
-    double latitude, lat;
-    double longitude, lng;
-    int counter = 0;
-    Polyline polyline2;
     private GoogleMap mMap;
 
     private static void animateMarker(final Marker marker, final int current, final LatLng[] line) {
@@ -158,105 +151,65 @@ public class NearbyMapActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_nearby_map);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        setContentView(R.layout.activity_single_map);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         Intent intent = getIntent();
+
         lat = intent.getDoubleExtra("lat", 0);
         lng = intent.getDoubleExtra("lng", 0);
-        nearPlaces = (PlacesList) intent.getSerializableExtra("near_places");
 
+        currentLat = intent.getDoubleExtra("currentLat", 0);
+        currentLng = intent.getDoubleExtra("currentLng", 0);
 
-
+        address = intent.getStringExtra("address");
+        name = intent.getStringExtra("name");
+        nearby = intent.getStringExtra("nearby");
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
 
+        location2 = new LatLng(lat, lng);
+        marker2 = mMap.addMarker(new MarkerOptions().position(location2)
+                .title(name)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .snippet(address)
+                .alpha(1f));
 
-        location = new LatLng(lat, lng);
-        fromLocation = new LatLng(lat, lng);
-
-        marker = mMap.addMarker(new MarkerOptions().position(location).title("Your Location"));
-        marker.showInfoWindow();
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15.5f));
+        marker2.showInfoWindow();
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(location2));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location2, 15.0f));
         mMap.getUiSettings().setCompassEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
 
 
-
-        if (nearPlaces.results != null) {
-
-            for (Place place : nearPlaces.results) {
-
-                count++;
-
-                latitude = place.geometry.location.lat; // latitude
-                longitude = place.geometry.location.lng; // longitude
-
-                location2 = new LatLng(latitude, longitude);
-
-                marker2 = mMap.addMarker(new MarkerOptions().position(location2)
-                        .title(place.name)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                        .snippet(place.vicinity)
-                        .alpha(1f));
-                marker2.showInfoWindow();
-
-
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(location2));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location2, 15.0f));
-                mMap.getUiSettings().setCompassEnabled(true);
-                mMap.getUiSettings().setZoomControlsEnabled(true);
-
-            }
-
-        }
-
+        location = new LatLng(currentLat, currentLng);
+        fromLocation = new LatLng(currentLat, currentLng);
+        marker = mMap.addMarker(new MarkerOptions().position(location).
+                title("Your Location")
+                .alpha(1f));
 
         marker.showInfoWindow();
 
-
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-
-
-                if (marker.getId().equals("m0")) {
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15.0f));
+        mMap.getUiSettings().setCompassEnabled(true);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
 
 
-                } else {
+        String url = getUrl(location, location2);
+        Log.d("onMapClick", url.toString());
+        FetchUrl FetchUrl = new FetchUrl();
 
-                    dest = marker.getPosition();
-                    origin = location;
-
-
-                    counter++;
-
-
-                    String url = getUrl(origin, dest);
-                    Log.d("onMapClick", url.toString());
-                    FetchUrl FetchUrl = new FetchUrl();
-
-                    FetchUrl.execute(url);
-                    //move map camera
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
-                    mMap.animateCamera(CameraUpdateFactory.zoomTo(16.5f));
-
-
-                }
-
-
-                return false;
-            }
-        });
+        FetchUrl.execute(url);
+        //move map camera
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(16.5f));
 
 
     }
@@ -327,6 +280,7 @@ public class NearbyMapActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     public void onLocationChanged(Location location) {
 
+
         LatLng toLocation = new LatLng(location.getLatitude(), location.getLongitude());
 
         if (fromLocation != null) {
@@ -338,6 +292,7 @@ public class NearbyMapActivity extends FragmentActivity implements OnMapReadyCal
             animateMarker(marker, 0, line);
 
         }
+
     }
 
     // Fetches data from url passed
@@ -402,11 +357,12 @@ public class NearbyMapActivity extends FragmentActivity implements OnMapReadyCal
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
             ArrayList<LatLng> points;
-            PolylineOptions lineOptions = new PolylineOptions();
+            PolylineOptions lineOptions = null;
 
             // Traversing through all the routes
             for (int i = 0; i < result.size(); i++) {
                 points = new ArrayList<>();
+                lineOptions = new PolylineOptions();
 
                 // Fetching i-th route
                 List<HashMap<String, String>> path = result.get(i);
@@ -423,41 +379,22 @@ public class NearbyMapActivity extends FragmentActivity implements OnMapReadyCal
                 }
 
                 // Adding all the points in the route to LineOptions
-
-
                 lineOptions.addAll(points);
                 lineOptions.width(10);
                 lineOptions.color(Color.RED);
 
+                Log.d("onPostExecute", "onPostExecute lineoptions decoded");
 
             }
 
             // Drawing polyline in the Google Map for the i-th route
             if (lineOptions != null) {
-
-
-                if (counter > 1) {
-
-                    polyline2.remove();
-                }
-
-                Polyline polyline = mMap.addPolyline(lineOptions);
-                polyline2 = polyline;
-
-
+                mMap.addPolyline(lineOptions);
             } else {
                 Log.d("onPostExecute", "without Polylines drawn");
             }
         }
     }
-
-
-
-
-
-
-
-
 
 
 }

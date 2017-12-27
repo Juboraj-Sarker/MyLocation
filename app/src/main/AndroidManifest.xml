@@ -40,7 +40,10 @@
             android:label="@string/title_activity_maps" />
         <activity
             android:name=".activity.NearbyMapActivity"
-            android:label="@string/title_activity_nearby_map"></activity>
+            android:label="@string/title_activity_nearby_map" />
+        <activity
+            android:name=".activity.SIngleMapActivity"
+            android:label="@string/title_activity_single_map"></activity>
     </application>
 
 </manifest>

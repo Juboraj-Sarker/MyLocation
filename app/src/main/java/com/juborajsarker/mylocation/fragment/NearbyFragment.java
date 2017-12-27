@@ -257,6 +257,8 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
                 // Sending place refrence id to single place activity
                 // place refrence id used to get "Place full details"
                 in.putExtra(KEY_REFERENCE, reference);
+                in.putExtra("currentLat", latitude);
+                in.putExtra("currentLng", longitude);
                 startActivity(in);
             }
         });
@@ -569,7 +571,7 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 4) {
 
-                        types = "hotel";
+                        types = "movie_theater";
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 5) {
 
@@ -577,7 +579,7 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 6) {
 
-                        types = "coffee_shop";
+                        types = "cafe";
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 7) {
 
@@ -585,7 +587,7 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 8) {
 
-                        types = "college";
+                        types = "laundry";
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 9) {
 
@@ -593,11 +595,11 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 10) {
 
-                        types = "police_station";
+                        types = "police";
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 11) {
 
-                        types = "fire_service";
+                        types = "mosque";
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 12) {
 
@@ -610,6 +612,18 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 14) {
 
                         types = "post_office";
+
+                    } else if (spinnerNearbyChoice.getSelectedItemPosition() == 15) {
+
+                        types = "pharmacy";
+
+                    } else if (spinnerNearbyChoice.getSelectedItemPosition() == 16) {
+
+                        types = "bar";
+
+                    } else if (spinnerNearbyChoice.getSelectedItemPosition() == 17) {
+
+                        types = "park";
 
                     }
 
