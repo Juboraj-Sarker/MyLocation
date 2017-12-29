@@ -1,20 +1,21 @@
 package com.juborajsarker.mylocation.activity;
 
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
-import android.animation.TypeEvaluator;
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.util.Property;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -23,9 +24,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.juborajsarker.mylocation.R;
-import com.juborajsarker.mylocation.java_class.CartesianCoordinates;
 import com.juborajsarker.mylocation.java_class.DataParser;
-import com.juborajsarker.mylocation.java_class.LatLngInterpolator;
 
 import org.json.JSONObject;
 
@@ -39,114 +38,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class SIngleMapActivity extends FragmentActivity implements OnMapReadyCallback, LocationSource.OnLocationChangedListener {
+public class SIngleMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    public static final long DURATION = 5000;
-    public static final LatLngInterpolator latLngInterpolator = new LatLngInterpolator.Linear();
-    public static final Property<Marker, LatLng> property = Property.of(Marker.class, LatLng.class, "position");
-    public static final TypeEvaluator<LatLng> typeEvaluator = new TypeEvaluator<LatLng>() {
-        @Override
-        public LatLng evaluate(float fraction, LatLng startValue, LatLng endValue) {
-            return latLngInterpolator.interpolate(fraction, startValue, endValue);
-        }
-    };
+
     double lat, lng, currentLat, currentLng;
     String address, name, nearby;
     Marker marker, marker2;
     LatLng location, location2, fromLocation;
     private GoogleMap mMap;
 
-    private static void animateMarker(final Marker marker, final int current, final LatLng[] line) {
-        if (line == null || line.length == 0 || current >= line.length) {
-            return;
-        }
-
-        ObjectAnimator animator = ObjectAnimator.ofObject(marker, property, typeEvaluator, line[current]);
-        animator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                animateMarker(marker, current + 1, line);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        });
-
-        animator.setDuration(DURATION);
-        animator.start();
-    }
-
-    private static LatLng[] bezier(LatLng p1, LatLng p2, double arcHeight, double skew, boolean up) {
-        ArrayList<LatLng> list = new ArrayList<>();
-        try {
-            if (p1.longitude > p2.longitude) {
-                LatLng tmp = p1;
-                p1 = p2;
-                p2 = tmp;
-            }
-
-            LatLng c = new LatLng((p1.latitude + p2.latitude) / 2, (p1.longitude + p2.longitude) / 2);
-
-            double cLat = c.latitude;
-            double cLon = c.longitude;
-
-            //add skew and arcHeight to move the midPoint
-            if (Math.abs(p1.longitude - p2.longitude) < 0.0001) {
-                if (up) {
-                    cLon -= arcHeight;
-                } else {
-                    cLon += arcHeight;
-                    cLat += skew;
-                }
-            } else {
-                if (up) {
-                    cLat += arcHeight;
-                } else {
-                    cLat -= arcHeight;
-                    cLon += skew;
-                }
-            }
-
-            list.add(p1);
-            //calculating points for bezier
-            double tDelta = 1.0 / 10;
-            CartesianCoordinates cart1 = new CartesianCoordinates(p1);
-            CartesianCoordinates cart2 = new CartesianCoordinates(p2);
-            CartesianCoordinates cart3 = new CartesianCoordinates(cLat, cLon);
-
-            for (double t = 0; t <= 1.0; t += tDelta) {
-                double oneMinusT = (1.0 - t);
-                double t2 = Math.pow(t, 2);
-
-                double y = oneMinusT * oneMinusT * cart1.y + 2 * t * oneMinusT * cart3.y + t2 * cart2.y;
-                double x = oneMinusT * oneMinusT * cart1.x + 2 * t * oneMinusT * cart3.x + t2 * cart2.x;
-                double z = oneMinusT * oneMinusT * cart1.z + 2 * t * oneMinusT * cart3.z + t2 * cart2.z;
-                LatLng control = CartesianCoordinates.toLatLng(x, y, z);
-                list.add(control);
-            }
-
-            list.add(p2);
-        } catch (Exception e) {
-
-        }
-
-        LatLng[] result = new LatLng[list.size()];
-        result = list.toArray(result);
-
-        return result;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -167,6 +67,52 @@ public class SIngleMapActivity extends FragmentActivity implements OnMapReadyCal
         address = intent.getStringExtra("address");
         name = intent.getStringExtra("name");
         nearby = intent.getStringExtra("nearby");
+
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+
+                LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+
+                marker.remove();
+                marker = mMap.addMarker(new MarkerOptions().position(currentLocation)
+                        .title("Your Location")
+                        .alpha(1f));
+
+
+                //  mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
+                mMap.getUiSettings().setCompassEnabled(true);
+                mMap.getUiSettings().setZoomControlsEnabled(true);
+                //   mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location2, mMap.getCameraPosition().zoom));
+
+
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+
+            }
+        });
+
     }
 
     @Override
@@ -210,6 +156,17 @@ public class SIngleMapActivity extends FragmentActivity implements OnMapReadyCal
         //move map camera
         mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(16.5f));
+
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+
+                marker.showInfoWindow();
+
+                return false;
+            }
+        });
 
 
     }
@@ -278,21 +235,9 @@ public class SIngleMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
     @Override
-    public void onLocationChanged(Location location) {
-
-
-        LatLng toLocation = new LatLng(location.getLatitude(), location.getLongitude());
-
-        if (fromLocation != null) {
-
-            marker.setPosition(fromLocation);
-
-            LatLng[] line = bezier(fromLocation, toLocation, 0, 0, true);
-            Marker marker = mMap.addMarker(new MarkerOptions().position(fromLocation));
-            animateMarker(marker, 0, line);
-
-        }
-
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
     // Fetches data from url passed

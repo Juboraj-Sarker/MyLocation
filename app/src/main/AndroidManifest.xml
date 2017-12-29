@@ -14,13 +14,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/MyMaterialTheme">
-        <activity android:name=".activity.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
+        <activity android:name=".activity.MainActivity">
+
+
         </activity>
+
+
         <activity android:name=".activity.LocationDetailsActivity" />
         <activity android:name=".activity.AboutActivity" />
         <!--
@@ -43,7 +44,21 @@
             android:label="@string/title_activity_nearby_map" />
         <activity
             android:name=".activity.SIngleMapActivity"
-            android:label="@string/title_activity_single_map"></activity>
+            android:label="@string/title_activity_single_map" />
+
+
+        <activity android:name=".activity.SplashActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+
+        </activity>
+
+
     </application>
 
 </manifest>

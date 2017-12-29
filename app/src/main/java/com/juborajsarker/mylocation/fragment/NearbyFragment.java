@@ -17,6 +17,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -84,6 +85,7 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
     boolean isGPS = false;
     boolean isNetwork = false;
     boolean canGetLocation = true;
+    int count = 0;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private double currentLatitude;
@@ -97,7 +99,7 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
 
         view = inflater.inflate(R.layout.fragment_nearby, container, false);
 
@@ -113,57 +115,72 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
                 execute();
                 init();
+                count++;
+
+
 
                 if (!mGoogleApiClient.isConnected()) {
 
                     mGoogleApiClient.connect();
-                }
-
-                if (mGoogleApiClient.isConnected()) {
-
-                    Toast.makeText(getContext(), "Connected !!!", Toast.LENGTH_SHORT).show();
-                }
 
 
-                if (checkLocationValidity()) {
-
-                    Geocoder geocoder = new Geocoder(getContext());
-
-                    try {
-                        List<Address> addresses = geocoder.getFromLocation(currentLatitude, currentLongitude, 1);
-                        if (geocoder.isPresent()) {
-                            StringBuilder stringBuilder = new StringBuilder();
-                            if (addresses.size() > 0) {
-                                returnAddress = addresses.get(0);
-
-                                latitude = currentLatitude;
-                                longitude = currentLongitude;
+                    if (count == 1) {
 
 
-                                if (latitude != 0 && longitude != 0) {
+                        pDialog = new ProgressDialog(view.getContext());
+                        pDialog.setMessage(Html.fromHtml("<b>Connecting with GPS</b><br/>Please wait...."));
+                        pDialog.setIndeterminate(false);
+                        pDialog.setCancelable(false);
+                        pDialog.show();
+
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            public void run() {
+                                pDialog.dismiss();
 
 
-                                    placesListItems.clear();
-                                    new LoadPlaces().execute();
-                                    btnShowOnMap.setVisibility(View.VISIBLE);
-
-
+                                AlertDialog.Builder builder;
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                    builder = new AlertDialog.Builder(getContext(), android.R.style.Theme_Material_Light_Dialog);
+                                } else {
+                                    builder = new AlertDialog.Builder(getContext());
                                 }
+                                builder.setTitle("Connected successfully !!!")
+                                        .setMessage("Press OK to continue")
+                                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                // continue with delete
+
+
+                                                if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
+
+                                                    fetchData();
+                                                } else {
+
+                                                    Toast.makeText(getContext(), "Please select a valid choice", Toast.LENGTH_SHORT).show();
+                                                }
+
+
+                                            }
+                                        }).setCancelable(false)
+                                        .show();
 
 
                             }
-                        } else {
-
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        }, 2000);
                     }
 
 
-                } else if (!checkLocationValidity()) {
+                }
 
-                    showSettingsAlert();
 
+                if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
+
+                    fetchData();
+
+                } else {
+
+                    Toast.makeText(getContext(), "Please select a valid choice", Toast.LENGTH_SHORT).show();
                 }
 
 
@@ -184,61 +201,15 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
                     mGoogleApiClient.connect();
                 }
 
-                if (mGoogleApiClient.isConnected()) {
 
-                    Toast.makeText(getContext(), "Connected !!!", Toast.LENGTH_SHORT).show();
+                if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
+
+                    fetchDataForMap();
+                } else {
+
+                    Toast.makeText(getContext(), "Please select a valid choice !!!", Toast.LENGTH_SHORT).show();
                 }
 
-
-                if (checkLocationValidity()) {
-
-                    Geocoder geocoder = new Geocoder(getContext());
-
-                    try {
-                        List<Address> addresses = geocoder.getFromLocation(currentLatitude, currentLongitude, 1);
-                        if (geocoder.isPresent()) {
-                            StringBuilder stringBuilder = new StringBuilder();
-                            if (addresses.size() > 0) {
-                                returnAddress = addresses.get(0);
-
-                                latitude = currentLatitude;
-                                longitude = currentLongitude;
-
-
-                                if (latitude != 0 && longitude != 0) {
-
-
-                                    placesListItems.clear();
-                                    new LoadPlaces().execute();
-
-                                    if (nearPlaces.results != null) {
-
-                                        Intent intent = new Intent(getContext(), NearbyMapActivity.class);
-                                        intent.putExtra("lat", latitude);
-                                        intent.putExtra("lng", longitude);
-                                        intent.putExtra("near_places", nearPlaces);
-                                        startActivity(intent);
-
-                                    }
-
-
-                                }
-
-
-                            }
-                        } else {
-
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-
-                } else if (!checkLocationValidity()) {
-
-                    showSettingsAlert();
-
-                }
 
             }
         });
@@ -265,6 +236,107 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
 
         return view;
+    }
+
+    private void fetchDataForMap() {
+
+
+        if (checkLocationValidity()) {
+
+            Geocoder geocoder = new Geocoder(getContext());
+
+            try {
+                List<Address> addresses = geocoder.getFromLocation(currentLatitude, currentLongitude, 1);
+                if (geocoder.isPresent()) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    if (addresses.size() > 0) {
+                        returnAddress = addresses.get(0);
+
+                        latitude = currentLatitude;
+                        longitude = currentLongitude;
+
+
+                        if (latitude != 0 && longitude != 0) {
+
+
+                            placesListItems.clear();
+                            new LoadPlaces().execute();
+
+                            if (nearPlaces.results != null) {
+
+                                Intent intent = new Intent(getContext(), NearbyMapActivity.class);
+                                intent.putExtra("lat", latitude);
+                                intent.putExtra("lng", longitude);
+                                intent.putExtra("near_places", nearPlaces);
+                                startActivity(intent);
+
+                            }
+
+
+                        }
+
+
+                    }
+                } else {
+
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        } else if (!checkLocationValidity()) {
+
+            showSettingsAlert();
+
+        }
+
+
+    }
+
+    private void fetchData() {
+
+
+        if (checkLocationValidity()) {
+
+            Geocoder geocoder = new Geocoder(getContext());
+
+            try {
+                List<Address> addresses = geocoder.getFromLocation(currentLatitude, currentLongitude, 1);
+                if (geocoder.isPresent()) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    if (addresses.size() > 0) {
+                        returnAddress = addresses.get(0);
+
+                        latitude = currentLatitude;
+                        longitude = currentLongitude;
+
+
+                        if (latitude != 0 && longitude != 0) {
+
+
+                            placesListItems.clear();
+                            new LoadPlaces().execute();
+                            btnShowOnMap.setVisibility(View.VISIBLE);
+
+
+                        }
+
+
+                    }
+                } else {
+
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        } else if (!checkLocationValidity()) {
+
+            showSettingsAlert();
+
+        }
     }
 
 
@@ -466,6 +538,9 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
     @Override
     public void onConnectionSuspended(int i) {
+
+        mGoogleApiClient.connect();
+        Toast.makeText(getActivity(), "Connection Suspended !!! Trying another way.", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -571,7 +646,7 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 4) {
 
-                        types = "movie_theater";
+                        types = "local_government_office";
 
                     } else if (spinnerNearbyChoice.getSelectedItemPosition() == 5) {
 

@@ -4,6 +4,7 @@ package com.juborajsarker.mylocation.fragment;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -13,17 +14,20 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -32,6 +36,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.juborajsarker.mylocation.R;
 import com.juborajsarker.mylocation.activity.MapsActivity;
+import com.juborajsarker.mylocation.java_class.CustomAdapter;
+import com.juborajsarker.mylocation.java_class.DataModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,10 +52,25 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     private final static int ALL_PERMISSIONS_RESULT = 101;
+    private static CustomAdapter adapter;
     final String TAG = "GPS";
+    public Handler handler = new Handler();
+    public final Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+
+
+            handler.postDelayed(runnable, 1000);
+        }
+
+
+    };
     View view;
     Button btnViewDetails, btnShowOnMap;
-    TextView cityTV, addressTV, subCityTV, countryNameTV, countryCodeTV, posterCodeTV, divisionTV, latitudeTV, longitudeTV;
+    ListView detailsLV;
+    ArrayList<DataModel> dataModels;
+    int counter = 0;
+    Location location;
     Double latitude;
     Double longitude;
     Address returnAddress;
@@ -60,6 +81,8 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
     boolean isGPS = false;
     boolean isNetwork = false;
     boolean canGetLocation = true;
+    boolean connected, error = false;
+    ProgressDialog pDialog;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private double currentLatitude;
@@ -71,73 +94,102 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         view = inflater.inflate(R.layout.fragment_location, container, false);
 
+
         execute();
         init();
 
-        cityTV = view.findViewById(R.id.cityTV);
-        addressTV = view.findViewById(R.id.addressTV);
-        subCityTV = view.findViewById(R.id.subCityTV);
-        countryNameTV = view.findViewById(R.id.countryNameTV);
-        countryCodeTV = view.findViewById(R.id.countryCodeTV);
-        posterCodeTV = view.findViewById(R.id.posterCodeTV);
-        divisionTV = view.findViewById(R.id.divisionTV);
-        latitudeTV = view.findViewById(R.id.latitudeTV);
-        longitudeTV = view.findViewById(R.id.longitudeTV);
+
+        detailsLV = (ListView) view.findViewById(R.id.detailsLV);
+        dataModels = new ArrayList<>();
+        adapter = new CustomAdapter(dataModels, getActivity().getApplicationContext());
+
+
+        pDialog = new ProgressDialog(view.getContext());
+        pDialog.setMessage(Html.fromHtml("<b>Getting GPS ready</b><br/>Please wait...."));
+        pDialog.setIndeterminate(false);
+        pDialog.setCancelable(false);
+        pDialog.show();
+
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+                pDialog.dismiss();
+
+            }
+        }, 5000);
+
 
         btnViewDetails = (Button) view.findViewById(R.id.btn_ViewDetails);
         btnShowOnMap = (Button) view.findViewById(R.id.btn_showOnMap);
         btnViewDetails.setOnClickListener(new View.OnClickListener() {
+
+
             @Override
             public void onClick(View v) {
 
+                counter++;
+                pDialog = new ProgressDialog(view.getContext());
+                pDialog.setMessage(Html.fromHtml("<b>Loading data</b><br/>Please wait...."));
+                pDialog.setIndeterminate(false);
+                pDialog.setCancelable(false);
+                pDialog.show();
 
                 execute();
                 init();
 
 
-                if (checkLocationValidity()) {
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
 
-                    Geocoder geocoder = new Geocoder(getContext());
+                        pDialog.dismiss();
 
-                    try {
-                        List<Address> addresses = geocoder.getFromLocation(currentLatitude, currentLongitude, 1);
-                        if (geocoder.isPresent()) {
-                            StringBuilder stringBuilder = new StringBuilder();
-                            if (addresses.size() > 0) {
-                                returnAddress = addresses.get(0);
+                        if (counter == 1) {
 
-                                latitude = currentLatitude;
-                                longitude = currentLongitude;
-
-
-                                if (latitude != 0 && longitude != 0) {
-
-
-                                    executeDate();
-                                    fetchData();
-
-
-                                }
-
-
+                            AlertDialog.Builder builder;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                builder = new AlertDialog.Builder(getContext(), android.R.style.Theme_Material_Light_Dialog);
+                            } else {
+                                builder = new AlertDialog.Builder(getContext());
                             }
-                        } else {
+                            builder.setTitle("Notice !!!")
+                                    .setMessage("For first time while GPS is on there have some difference in location value. So Please wait a while to accurate data. Thank you")
+                                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            // continue with delete
 
+                                            dialog.dismiss();
+
+
+                                        }
+                                    }).setCancelable(false)
+                                    .show();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+
                     }
+                }, 2000);
 
 
-                } else if (!checkLocationValidity()) {
+                if (mGoogleApiClient.isConnected()) {
 
-                    showSettingsAlert();
+
+                    runToFetchData();
+
+                } else if (mGoogleApiClient.isConnecting()) {
+
+
+                } else {
+
+                    mGoogleApiClient.connect();
+                    runToFetchData();
 
                 }
 
@@ -155,47 +207,20 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
                 init();
 
 
-                if (checkLocationValidity()) {
+                if (!mGoogleApiClient.isConnected()) {
 
-                    Geocoder geocoder = new Geocoder(getContext());
-
-                    try {
-                        List<Address> addresses = geocoder.getFromLocation(currentLatitude, currentLongitude, 1);
-                        if (geocoder.isPresent()) {
-                            StringBuilder stringBuilder = new StringBuilder();
-                            if (addresses.size() > 0) {
-                                returnAddress = addresses.get(0);
-
-                                latitude = currentLatitude;
-                                longitude = currentLongitude;
+                    mGoogleApiClient.connect();
+                }
 
 
-                                if (latitude != 0 && longitude != 0) {
+                if (mGoogleApiClient.isConnecting()) {
 
-
-                                    Intent intent = new Intent(getContext(), MapsActivity.class);
-                                    intent.putExtra("lat", latitude);
-                                    intent.putExtra("lng", longitude);
-                                    startActivity(intent);
-
-
-                                }
-
-
-                            }
-                        } else {
-
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-
-                } else if (!checkLocationValidity()) {
-
-                    showSettingsAlert();
 
                 }
+
+
+                runToFetchDataForMap();
+
 
             }
         });
@@ -203,13 +228,110 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
         return view;
     }
 
+    private void runToFetchData() {
+
+
+        if (checkLocationValidity()) {
+
+            Geocoder geocoder = new Geocoder(getContext());
+
+            try {
+                List<Address> addresses = geocoder.getFromLocation(currentLatitude, currentLongitude, 1);
+
+                if (geocoder.isPresent()) {
+
+                    StringBuilder stringBuilder = new StringBuilder();
+
+                    if (addresses.size() > 0) {
+
+                        returnAddress = addresses.get(0);
+
+                        latitude = currentLatitude;
+                        longitude = currentLongitude;
+
+
+                        if (latitude != 0 && longitude != 0) {
+
+
+                            executeData();
+                            fetchData();
+
+
+                        } else {
+
+
+                            Toast.makeText(getContext(), "Error", Toast.LENGTH_SHORT).show();
+                        }
+
+
+                    }
+                } else {
+
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        } else if (!checkLocationValidity()) {
+
+            showSettingsAlert();
+
+        }
+    }
+
+    private void runToFetchDataForMap() {
+
+
+        if (checkLocationValidity()) {
+
+            Geocoder geocoder = new Geocoder(getContext());
+
+            try {
+                List<Address> addresses = geocoder.getFromLocation(currentLatitude, currentLongitude, 1);
+                if (geocoder.isPresent()) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    if (addresses.size() > 0) {
+                        returnAddress = addresses.get(0);
+
+                        latitude = currentLatitude;
+                        longitude = currentLongitude;
+
+
+                        if (latitude != 0 && longitude != 0) {
+
+
+                            Intent intent = new Intent(getContext(), MapsActivity.class);
+                            intent.putExtra("lat", latitude);
+                            intent.putExtra("lng", longitude);
+                            startActivity(intent);
+
+
+                        }
+
+
+                    }
+                } else {
+
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        } else if (!checkLocationValidity()) {
+
+            showSettingsAlert();
+
+        }
+    }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        mGoogleApiClient.connect();
 
+        mGoogleApiClient.connect();
 
     }
 
@@ -239,8 +361,10 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
         mLocationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(10 * 1000)
-                .setFastestInterval(1 * 1000);
+                .setInterval(0)
+                .setFastestInterval(0);
+
+
     }
 
     private void init() {
@@ -275,7 +399,6 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
         }
     }
 
-
     private ArrayList findUnAskedPermissions(ArrayList<String> wanted) {
         ArrayList result = new ArrayList();
 
@@ -287,7 +410,6 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
         return result;
     }
-
 
     private boolean hasPermission(String permission) {
         if (canAskPermission()) {
@@ -301,7 +423,6 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
     private boolean canAskPermission() {
         return (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1);
     }
-
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
@@ -340,12 +461,13 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
         }
     }
 
-
     public void showSettingsAlert() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
         alertDialog.setTitle("GPS is not Enabled!");
         alertDialog.setMessage("Do you want to turn on GPS?");
         alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 getActivity().startActivity(intent);
@@ -361,7 +483,6 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
         alertDialog.show();
     }
 
-
     private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
         new AlertDialog.Builder(getContext())
                 .setMessage(message)
@@ -371,9 +492,9 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
                 .show();
     }
 
-
     @Override
     public void onConnected(Bundle bundle) {
+
 
         if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(),
@@ -381,27 +502,70 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
             return;
         }
-        Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+
+
+        if (checkLocationValidity()) {
+
+
+            requestForLocation();
+
+            location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        }
 
         if (location == null) {
-//            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest,
-            //                (com.google.android.gms.location.LocationListener) this);
+
+            requestForLocation();
+            error = true;
+
+            AlertDialog.Builder builder;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                builder = new AlertDialog.Builder(getContext(), android.R.style.Theme_Material_Light_Dialog);
+            } else {
+                builder = new AlertDialog.Builder(getContext());
+            }
+            builder.setTitle("Problem in loading data")
+                    .setMessage("There is a problem while fetching data from GPS. Better solution is re-connect GPS\nPress OK to continue")
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // continue with delete
+
+
+                            dialog.dismiss();
+
+
+                        }
+                    }).setCancelable(false)
+                    .show();
+
 
         } else {
 
             currentLatitude = location.getLatitude();
             currentLongitude = location.getLongitude();
+            error = false;
+
+            //  runToFetchData();
 
         }
-    }
 
+
+        connected = true;
+
+    }
 
     @Override
     public void onConnectionSuspended(int i) {
+
+        mGoogleApiClient.reconnect();
+        Toast.makeText(getActivity(), "Connection Suspended !!! Trying another way.", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
+
+        Toast.makeText(getContext(), "Connection Failed. Trying another way.", Toast.LENGTH_SHORT).show();
+        mGoogleApiClient.reconnect();
+
 
         if (connectionResult.hasResolution()) {
             try {
@@ -418,9 +582,9 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
         }
     }
 
-
     @Override
     public void onLocationChanged(Location location) {
+
         currentLatitude = location.getLatitude();
         currentLongitude = location.getLongitude();
 
@@ -442,7 +606,6 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
     }
 
-
     public boolean checkLocationValidity() {
 
         LocationManager locateManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
@@ -460,8 +623,7 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
     }
 
-
-    private void executeDate() {
+    private void executeData() {
 
         Geocoder geocoder = new Geocoder(getContext());
 
@@ -480,7 +642,6 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
         }
     }
 
-
     private void fetchData() {
 
         String city = returnAddress.getLocality();
@@ -496,19 +657,56 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
         String premises = returnAddress.getPremises();
         String url = returnAddress.getUrl();
 
-        cityTV.setText(city);
-        addressTV.setText(address);
-        subCityTV.setText(subCity);
-        countryNameTV.setText(countryName);
-        countryCodeTV.setText(countryCode);
-        posterCodeTV.setText(zip_Code);
-        divisionTV.setText(division);
 
-        latitudeTV.setText(String.valueOf(latitude));
-        longitudeTV.setText(String.valueOf(longitude));
+        adapter.clear();
+        dataModels.add(new DataModel(address, city, subCity, zip_Code, division, countryName,
+                countryCode, String.valueOf(latitude), String.valueOf(longitude)));
+
+        detailsLV.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
 
 
     }
+
+    private void requestForLocation() {
+
+        if (checkLocationValidity()) {
+
+            if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(),
+                    Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                return;
+            }
+            location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        }
+    }
+
+    private void turnGPSOn() {
+        String provider = Settings.Secure.getString(getActivity().getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+
+        if (!provider.contains("gps")) { //if gps is disabled
+            final Intent poke = new Intent();
+            poke.setClassName("com.android.settings", "com.android.settings.widget.SettingsAppWidgetProvider");
+            poke.addCategory(Intent.CATEGORY_ALTERNATIVE);
+            poke.setData(Uri.parse("3"));
+            getActivity().sendBroadcast(poke);
+        }
+    }
+
+    private void turnGPSOff() {
+        String provider = Settings.Secure.getString(getActivity().getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+
+        if (provider.contains("gps")) { //if gps is enabled
+            final Intent poke = new Intent();
+            poke.setClassName("com.android.settings", "com.android.settings.widget.SettingsAppWidgetProvider");
+            poke.addCategory(Intent.CATEGORY_ALTERNATIVE);
+            poke.setData(Uri.parse("3"));
+            getActivity().sendBroadcast(poke);
+        }
+    }
+
+
 
 
 }

@@ -55,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new LocationFragment(), "Location Details");
-        adapter.addFragment(new NearbyFragment(), "Nearby");
+        adapter.addFragment(new LocationFragment(), "My Location Details");
+        adapter.addFragment(new NearbyFragment(), "Nearest Places");
         viewPager.setAdapter(adapter);
     }
 
