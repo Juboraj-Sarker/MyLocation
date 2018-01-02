@@ -5,6 +5,7 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -26,8 +27,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -35,6 +38,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -65,12 +71,15 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
     public static String KEY_NAME = "name"; // name of the place
     public static String KEY_VICINITY = "vicinity"; // Place area name
     final String TAG = "GPS";
+    InterstitialAd mInterstitialAd;
     View view;
     Spinner spinnerNearbyChoice;
     Button btnSearch, btnShowOnMap;
     ListView lv;
-    Double latitude;
-    Double longitude;
+    EditText radiusET;
+
+    Double latitude, longitude;
+    double userRadius;
     ProgressDialog pDialog;
     String types;
     PlacesList nearPlaces;
@@ -107,81 +116,131 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
         btnSearch = (Button) view.findViewById(R.id.btn_search);
         btnShowOnMap = (Button) view.findViewById(R.id.btn_show_on_map);
         lv = (ListView) view.findViewById(R.id.lv_nearby);
+        radiusET = (EditText) view.findViewById(R.id.radius_ET);
 
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
 
-                execute();
-                init();
-                count++;
+                try {
+                    InputMethodManager inputManager = (InputMethodManager)
+                            getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                    inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(),
+                            InputMethodManager.HIDE_NOT_ALWAYS);
+
+                } catch (Exception e) {
 
 
-
-                if (!mGoogleApiClient.isConnected()) {
-
-                    mGoogleApiClient.connect();
+                }
 
 
-                    if (count == 1) {
+                mInterstitialAd = new InterstitialAd(getContext());
+                mInterstitialAd.setAdUnitId(getString(R.string.interstitial_full_screen1));
+
+                AdRequest adRequest = new AdRequest.Builder().addTestDevice("93448558CC721EBAD8FAAE5DA52596D3").build(); //add test device
+                mInterstitialAd.loadAd(adRequest);
+
+                mInterstitialAd.setAdListener(new AdListener() {
+                    public void onAdLoaded() {
+                        showInterstitial();
+                    }
+                });
 
 
-                        pDialog = new ProgressDialog(view.getContext());
-                        pDialog.setMessage(Html.fromHtml("<b>Connecting with GPS</b><br/>Please wait...."));
-                        pDialog.setIndeterminate(false);
-                        pDialog.setCancelable(false);
-                        pDialog.show();
+                if (radiusET.getText().toString().equals("")) {
 
-                        Handler handler = new Handler();
-                        handler.postDelayed(new Runnable() {
-                            public void run() {
-                                pDialog.dismiss();
+                    radiusET.setError("Enter enter a valid radius");
 
+                } else {
 
-                                AlertDialog.Builder builder;
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                    builder = new AlertDialog.Builder(getContext(), android.R.style.Theme_Material_Light_Dialog);
-                                } else {
-                                    builder = new AlertDialog.Builder(getContext());
-                                }
-                                builder.setTitle("Connected successfully !!!")
-                                        .setMessage("Press OK to continue")
-                                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                // continue with delete
+                    userRadius = Double.parseDouble(radiusET.getText().toString());
+
+                    if (userRadius == 0) {
+
+                        radiusET.setError("Radius cannot be zero");
+                        Toast.makeText(getContext(), "Radius cannot be zero", Toast.LENGTH_SHORT).show();
+
+                    } else {
+
+                        execute();
+                        init();
+                        count++;
 
 
-                                                if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
+                        if (!mGoogleApiClient.isConnected()) {
 
-                                                    fetchData();
-                                                } else {
-
-                                                    Toast.makeText(getContext(), "Please select a valid choice", Toast.LENGTH_SHORT).show();
-                                                }
+                            mGoogleApiClient.connect();
 
 
-                                            }
-                                        }).setCancelable(false)
-                                        .show();
+                            if (count == 1) {
 
 
+                                pDialog = new ProgressDialog(view.getContext());
+                                pDialog.setMessage(Html.fromHtml("<b>Connecting with GPS</b><br/>Please wait...."));
+                                pDialog.setIndeterminate(false);
+                                pDialog.setCancelable(false);
+                                pDialog.show();
+
+                                Handler handler = new Handler();
+                                handler.postDelayed(new Runnable() {
+                                    public void run() {
+                                        pDialog.dismiss();
+
+
+                                        AlertDialog.Builder builder;
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                            builder = new AlertDialog.Builder(getContext(), android.R.style.Theme_Material_Light_Dialog);
+                                        } else {
+                                            builder = new AlertDialog.Builder(getContext());
+                                        }
+                                        builder.setTitle("Connected successfully !!!")
+                                                .setMessage("Press OK to continue")
+                                                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        // continue with delete
+
+
+                                                        if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
+
+                                                            fetchData();
+                                                        } else {
+
+                                                            Toast.makeText(getContext(), "Please select a valid choice", Toast.LENGTH_SHORT).show();
+                                                        }
+
+
+                                                    }
+                                                }).setCancelable(false)
+                                                .show();
+
+
+                                    }
+                                }, 2000);
                             }
-                        }, 2000);
+
+
+                        }
+
+
+                        if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
+
+                            fetchData();
+
+                        } else {
+
+                            Toast.makeText(getContext(), "Please select a valid choice", Toast.LENGTH_SHORT).show();
+                        }
+
                     }
 
 
                 }
 
 
-                if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
 
-                    fetchData();
 
-                } else {
-
-                    Toast.makeText(getContext(), "Please select a valid choice", Toast.LENGTH_SHORT).show();
-                }
 
 
             }
@@ -193,22 +252,59 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
             public void onClick(View v) {
 
 
-                execute();
-                init();
+                try {
+                    InputMethodManager inputManager = (InputMethodManager)
+                            getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 
-                if (!mGoogleApiClient.isConnected()) {
+                    inputManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(),
+                            InputMethodManager.HIDE_NOT_ALWAYS);
 
-                    mGoogleApiClient.connect();
+                } catch (Exception e) {
+
+
                 }
 
 
-                if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
+                if (radiusET.getText().toString().equals("")) {
 
-                    fetchDataForMap();
+                    radiusET.setError("Enter enter a valid radius");
+
                 } else {
 
-                    Toast.makeText(getContext(), "Please select a valid choice !!!", Toast.LENGTH_SHORT).show();
+                    userRadius = Double.parseDouble(radiusET.getText().toString());
+
+                    if (userRadius == 0) {
+
+                        radiusET.setError("Radius cannot be zero");
+                        Toast.makeText(getContext(), "Radius cannot be zero", Toast.LENGTH_SHORT).show();
+
+                    } else {
+
+
+                        execute();
+                        init();
+
+                        if (!mGoogleApiClient.isConnected()) {
+
+                            mGoogleApiClient.connect();
+                        }
+
+
+                        if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
+
+                            fetchDataForMap();
+                        } else {
+
+                            Toast.makeText(getContext(), "Please select a valid choice !!!", Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+
+
                 }
+
+
+
 
 
             }
@@ -358,10 +454,10 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
     public void onDestroy() {
         super.onDestroy();
 
-        if (mGoogleApiClient.isConnected()) {
-
-            mGoogleApiClient.disconnect();
-        }
+//        if (mGoogleApiClient.isConnected()) {
+//
+//            mGoogleApiClient.disconnect();
+//        }
 
 
     }
@@ -603,6 +699,11 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
 
     }
 
+    private void showInterstitial() {
+        if (mInterstitialAd.isLoaded()) {
+            mInterstitialAd.show();
+        }
+    }
 
     class LoadPlaces extends AsyncTask<String, String, String> {
 
@@ -625,10 +726,7 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
             googlePlaces = new GooglePlaces();
 
             try {
-                // Separeate your place types by PIPE symbol "|"
-                // If you want all types places make it as null
-                // Check list of types supported by google
-                //
+
 
                 if (spinnerNearbyChoice.getSelectedItemPosition() > 0) {
 
@@ -709,7 +807,7 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
                 // Listing places only cafes, restaurants
 
                 // Radius in meters - increase this value if you don't find any places
-                double radius = 1000; // 1000 meters
+                double radius = userRadius * 1000; // 1000 meters
 
                 // get nearest places
                 nearPlaces = googlePlaces.search(latitude, longitude, radius, types);
@@ -721,12 +819,7 @@ public class NearbyFragment extends Fragment implements GoogleApiClient.Connecti
             return null;
         }
 
-        /**
-         * After completing background task Dismiss the progress dialog
-         * and show the data in UI
-         * Always use runOnUiThread(new Runnable()) to update UI from background
-         * thread, otherwise you will get error
-         **/
+
         protected void onPostExecute(String file_url) {
             // dismiss the dialog after getting all products
             pDialog.dismiss();

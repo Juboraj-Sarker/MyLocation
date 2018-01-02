@@ -14,6 +14,7 @@ import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.juborajsarker.mylocation.R;
@@ -33,10 +34,14 @@ public class SplashActivity extends AppCompatActivity {
     boolean isNetwork = false;
     boolean canGetLocation = true;
 
+    TextView loadingTV;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+
+        loadingTV = (TextView) findViewById(R.id.loading_TV);
 
 
     }
@@ -48,17 +53,21 @@ public class SplashActivity extends AppCompatActivity {
 
         if (!checkLocationValidity()) {
 
+            loadingTV.setVisibility(View.GONE);
             showSettingsAlert();
 
         } else {
 
 
+            loadingTV.setVisibility(View.VISIBLE);
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
 
+
                     startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                    finish();
 
                 }
             }, 5000);
@@ -69,7 +78,14 @@ public class SplashActivity extends AppCompatActivity {
 
     public void click(View view) {
 
+        if (!checkLocationValidity()) {
 
+            showSettingsAlert();
+
+        } else {
+
+            Toast.makeText(this, "Please wait while GPS is ready !!!", Toast.LENGTH_SHORT).show();
+        }
     }
 
 

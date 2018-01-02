@@ -30,6 +30,9 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -49,7 +52,6 @@ import static android.content.Context.LOCATION_SERVICE;
 public class LocationFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
-
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     private final static int ALL_PERMISSIONS_RESULT = 101;
     private static CustomAdapter adapter;
@@ -65,6 +67,7 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
 
     };
+    InterstitialAd mInterstitialAd;
     View view;
     Button btnViewDetails, btnShowOnMap;
     ListView detailsLV;
@@ -133,6 +136,21 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
 
             @Override
             public void onClick(View v) {
+
+
+                mInterstitialAd = new InterstitialAd(getContext());
+                mInterstitialAd.setAdUnitId(getString(R.string.interstitial_full_screen1));
+
+                AdRequest adRequest = new AdRequest.Builder().addTestDevice("93448558CC721EBAD8FAAE5DA52596D3").build(); //add test device
+                mInterstitialAd.loadAd(adRequest);
+
+                mInterstitialAd.setAdListener(new AdListener() {
+                    public void onAdLoaded() {
+                        showInterstitial();
+                    }
+                });
+
+
 
                 counter++;
                 pDialog = new ProgressDialog(view.getContext());
@@ -707,6 +725,10 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
     }
 
 
-
+    private void showInterstitial() {
+        if (mInterstitialAd.isLoaded()) {
+            mInterstitialAd.show();
+        }
+    }
 
 }

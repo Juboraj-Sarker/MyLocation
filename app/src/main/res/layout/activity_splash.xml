@@ -1,16 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#125688"
     android:orientation="vertical"
     tools:context="com.juborajsarker.mylocation.activity.SplashActivity">
 
-    <Button
+
+    <ImageView
+        android:id="@+id/icon_IV"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true"
+        android:padding="8dp"
+        android:src="@drawable/web_hi_res_512" />
+
+
+    <TextView
+        android:id="@+id/loading_TV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="click"
-        android:text="Click" />
+        android:layout_below="@id/icon_IV"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Loading.........."
+        android:textColor="#fff"
+        android:textSize="16sp" />
 
-</LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:onClick="click"
+        android:padding="8dp"
+        android:text="Without GPS on this app won't work properly.\nClick here if you didn't turn on GPS"
+        android:textColor="#fff"
+        android:textSize="12sp" />
+
+
+</RelativeLayout>

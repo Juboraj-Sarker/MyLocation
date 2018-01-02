@@ -32,13 +32,13 @@
 
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="130dp"
+            android:layout_height="130dp"
             android:layout_gravity="center"
             android:layout_marginTop="10dp"
             android:elevation="4dp"
-            android:padding="8dp"
-            android:src="@drawable/ic_launcher" />
+            android:padding="5dp"
+            android:src="@drawable/web_hi_res_512" />
 
 
         <ScrollView
@@ -114,7 +114,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:padding="8dp"
-                        android:text="1"
+                        android:text="7"
                         android:textColor="#aa000000"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -147,7 +147,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:padding="8dp"
-                        android:text="1.0"
+                        android:text="7.0"
                         android:textColor="#aa000000"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -178,9 +178,10 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:onClick="myWebSite"
                         android:padding="8dp"
-                        android:text="Juboraj Sarker"
-                        android:textColor="#aa000000"
+                        android:text="@string/juboraj_sarker"
+                        android:textColor="#0f2a94"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -211,7 +212,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:padding="8dp"
-                        android:text="28 December, 2017"
+                        android:text="01 January, 2018"
                         android:textColor="#aa000000"
                         android:textSize="18sp"
                         android:textStyle="bold" />

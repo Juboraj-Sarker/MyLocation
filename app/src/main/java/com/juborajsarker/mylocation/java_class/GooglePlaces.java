@@ -24,9 +24,9 @@ public class GooglePlaces {
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
     // Google API Key
-    //  private static final String API_KEY = "AIzaSyCHcP8KX1RxftQ6ufiG23S7ZmMe_riOf90";
+    private static final String API_KEY = "AIzaSyAx57Sj61fyZ2SpW-2CHJY5FTAmnpPXKUI";
 
-    private static final String API_KEY = "AIzaSyCRLa4LQZWNQBcjCYcIVYA45i9i8zfClqc";
+    // private static final String API_KEY = "AIzaSyCRLa4LQZWNQBcjCYcIVYA45i9i8zfClqc";
 
     // Google Places serach url's
     private static final String PLACES_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/search/json?";
@@ -45,7 +45,7 @@ public class GooglePlaces {
         return transport.createRequestFactory(new HttpRequestInitializer() {
             public void initialize(HttpRequest request) {
                 GoogleHeaders headers = new GoogleHeaders();
-                headers.setApplicationName("AndroidHive-Places-Test");
+                headers.setApplicationName("Juboraj_My_Location");
                 request.setHeaders(headers);
                 JsonHttpParser parser = new JsonHttpParser(new JacksonFactory());
                 request.addParser(parser);
