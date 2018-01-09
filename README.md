@@ -1,0 +1,2 @@
+# MyLocation
+My Location is a free android app for find out the full details about user’s current location. The main feature of My Location is, showing the nearest or nearby places within user's choice radius. For Example: If one user wants to see the all coffee-shop between his/her 1 Kilometre from his/her current location. Also it will able to show all the places in map with multiple map marker. User will able to see the shortest path of going that place from his/her current location. All data is real time and also it will be update with location change.
